@@ -1,17 +1,58 @@
 ---
-title: "Mini-Project 2"
-author: "Your Name Here"
+title: "Which presidential candidate made the most money?"
+author: "Mariama Jaiteh,Khadidja Fares,and Fatima Keita"
 date: "March 24, 2017"
 output: html_document
 ---
 
 
 ## Loading the data
-
-
-```{r, include=FALSE}
-load("house_elections.rda")
+```{r, message=FALSE, cache = FALSE}
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
+load("individuals.rda")
+
+library(tidyverse)
+library(knitr)
+candidates <- candidates %>%
+  rename(cmte_id = cand_pcc)
+
 ```
+
+## Select only the presidential candidates
+```{r, cache = FALSE,message=FALSE}
+
+cand <- candidates %>%
+  select(cand_id,cand_election_yr,cand_office,cmte_id,cand_name) %>%
+  filter(cand_office == "P") %>%
+  select(-cand_office)
+
+indiv <- individuals %>%
+  select(cmte_id,transaction_amt)
+
+committ <- contributions %>%
+  select(cand_id,transaction_amt)
+
+```
+## Join datasets
+```{r, cache = FALSE,message=FALSE}
+individual_contri <- cand %>%
+  inner_join(indiv,by = c("cmte_id"))
+
+individual_contri <- individual_contri %>%
+  filter(cand_election_yr == "2012")
+```
+
+## So who made the most money?
+```{r, cache = FALSE,message=FALSE}
+popular_candidate <- individual_contri %>%
+  group_by(cand_name) %>%
+  summarise(amt = sum(transaction_amt)) %>%
+  arrange(desc(amt))
+
+top_10 <- popular_candidate %>% top_n(10,amt)
+top_10
+
+```
+
